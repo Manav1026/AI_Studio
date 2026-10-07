@@ -1,4 +1,4 @@
-# SF AI Workspace — Salesforce + AI + MCP (production-continuable prototype)
+# AI Studio — Salesforce + AI + MCP
 
 Ask Salesforce questions in plain English. The system reads your org's metadata, builds a structured plan with AI,
 compiles **read-only SOQL**, validates it against the catalog and policy, executes it under your Salesforce
