@@ -1,0 +1,87 @@
+# Local development stack. Same container images are promoted to cloud environments later.
+
+x-api-env: &api-env
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+psycopg://admin:admin123@postgres:5432/admin
+    REDIS_URL: redis://redis:6379/0
+    API_BASE_URL: http://localhost:8000
+    WEB_BASE_URL: http://localhost:3000
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: admin
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d admin"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  migrate:
+    build:
+      { context: ./services/api, dockerfile: ../../infra/docker/api.Dockerfile }
+    <<: *api-env
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    build:
+      { context: ./services/api, dockerfile: ../../infra/docker/api.Dockerfile }
+    <<: *api-env
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports: ["8000:8000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  worker:
+    build:
+      { context: ./services/api, dockerfile: ../../infra/docker/api.Dockerfile }
+    <<: *api-env
+    command: ["python", "-m", "app.workers.main"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  mcp:
+    build:
+      { context: ./services/api, dockerfile: ../../infra/docker/api.Dockerfile }
+    <<: *api-env
+    command: ["python", "-m", "app.mcp.server"]
+    ports: ["8001:8001"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  web:
+    build:
+      { context: ./apps/web, dockerfile: ../../infra/docker/web.Dockerfile }
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    ports: ["3000:3000"]
+    depends_on: [api]
+
+  # Optional: local OpenTelemetry collector (enable with OTEL_ENABLED=true, OTEL_EXPORTER=otlp)
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    profiles: ["observability"]
+    ports: ["4318:4318"]
+
+volumes:
+  pgdata:
+  redisdata:
