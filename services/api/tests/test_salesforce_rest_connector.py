@@ -1,7 +1,6 @@
 """Live connector against mocked Salesforce HTTP responses (no network)."""
 import httpx
 import pytest
-
 from app.integrations.salesforce.base import SalesforceError
 from app.integrations.salesforce.rest import RestSalesforceConnector
 

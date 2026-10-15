@@ -1,5 +1,4 @@
 import pytest
-
 from app.domain.soql.ast import to_soql
 from app.domain.soql.parser import SoqlParseError, parse_soql
 

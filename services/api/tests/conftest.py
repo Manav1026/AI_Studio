@@ -1,7 +1,7 @@
 import os
 
 os.environ.setdefault("APP_ENV", "test")
-os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://sfai:sfai@localhost:5432/sfai_test")
+os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://admin:admin123@localhost:5432/admin")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 os.environ["SYNC_MODE"] = "inline"
 os.environ["SALESFORCE_MODE"] = "mock"
@@ -13,11 +13,10 @@ os.environ["APP_SECRET_KEY"] = "test-secret-key-0123456789abcdef0123456789"
 import pytest  # noqa: E402
 from alembic import command  # noqa: E402
 from alembic.config import Config  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy import text  # noqa: E402
-
 from app.cache.redis import get_redis  # noqa: E402
 from app.db.session import get_engine  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import text  # noqa: E402
 
 HERE = os.path.dirname(os.path.dirname(__file__))
 

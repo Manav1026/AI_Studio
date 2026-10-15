@@ -1,5 +1,4 @@
 import pytest
-
 from app.domain.catalog_view import CatalogView, FieldInfo, ObjectInfo
 from app.domain.policy import QueryPolicy
 from app.domain.query_plan import QueryPlan, plan_to_soql
